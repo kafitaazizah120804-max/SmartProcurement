@@ -19,15 +19,28 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     setLoading(true)
 
     try {
+      if (!email || !password) {
+        setError('Email dan password harus diisi')
+        return
+      }
+
       const user = await db.table<User>('users').where('email').equals(email).first()
       
-      if (user && user.password === password) {
-        onLogin(user)
-      } else {
+      if (!user) {
         setError('Email atau password salah')
+        return
       }
+
+      if (user.password !== password) {
+        setError('Email atau password salah')
+        return
+      }
+
+      onLogin(user)
     } catch (err) {
-      setError('Terjadi kesalahan saat login')
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      setError(`Terjadi kesalahan saat login: ${errorMessage}`)
+      console.error('Login error:', err)
     } finally {
       setLoading(false)
     }
